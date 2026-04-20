@@ -37,7 +37,7 @@ SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
-YEARS = [2020, 2021, 2022, 2023, 2024]
+YEARS = [2020, 2021, 2022, 2023, 2024, 2025]
 SESSIONS = [
     ("s", "May/June"),
     ("w", "Oct/Nov"),
