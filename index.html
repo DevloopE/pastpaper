@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AS-Level Past Papers</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface-alt: #faf9f6;
+    --border: #e5e3dd;
+    --text: #1b1b1b;
+    --muted: #6b6b6b;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --done: #16a34a;
+    --done-soft: #dcfce7;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+    --mono: ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  [data-theme="dark"] {
+    --bg: #13141a;
+    --surface: #1c1d25;
+    --surface-alt: #23242e;
+    --border: #2e303b;
+    --text: #e8e8ea;
+    --muted: #8a8b94;
+    --accent: #60a5fa;
+    --accent-soft: #1e3a5f;
+    --done: #4ade80;
+    --done-soft: #1a3a25;
+    --shadow: 0 1px 2px rgba(0,0,0,.2), 0 4px 14px rgba(0,0,0,.25);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .top-inner {
+    max-width: 1200px; margin: 0 auto;
+    padding: 14px 20px 0;
+  }
+  .title-row {
+    display: flex; align-items: baseline; gap: 16px;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-size: 18px; font-weight: 600; margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: var(--muted); font-size: 12px; }
+  .toolbar {
+    margin-left: auto;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .toolbar input[type="search"] {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-alt);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 13px;
+    min-width: 180px;
+  }
+  .toolbar button {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: var(--surface-alt);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .toolbar button:hover { border-color: var(--accent); }
+
+  .tabs {
+    display: flex; gap: 2px; margin-top: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 16px;
+    border: none; background: none; cursor: pointer;
+    color: var(--muted);
+    font-size: 14px; font-weight: 500;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab .count {
+    font-size: 11px;
+    background: var(--surface-alt);
+    color: var(--muted);
+    padding: 2px 8px; border-radius: 10px;
+    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--border);
+  }
+  .tab.active .count {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+  }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  .year-block { margin-bottom: 28px; }
+  .year-head {
+    font-size: 22px; font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .paper-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .paper-head {
+    padding: 12px 16px;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .paper-code {
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 600;
+    color: var(--accent);
+  }
+  .paper-label { color: var(--muted); font-size: 13px; }
+  .paper-progress {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.done { background: var(--done-soft); }
+  tbody tr.done td { opacity: 0.75; }
+
+  .session-cell { font-weight: 500; min-width: 90px; }
+  .variant-cell { font-family: var(--mono); color: var(--muted); width: 60px; }
+
+  .doc-links { display: flex; gap: 6px; flex-wrap: wrap; }
+  .doc-links a {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 12px;
+    font-family: var(--mono);
+    text-decoration: none;
+    color: var(--text);
+    background: var(--surface);
+  }
+  .doc-links a:hover { border-color: var(--accent); color: var(--accent); }
+  .doc-links a.missing {
+    color: var(--muted);
+    opacity: 0.5;
+    pointer-events: none;
+    text-decoration: line-through;
+  }
+
+  .check-cell { width: 40px; text-align: right; }
+  .check-cell input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--done);
+    cursor: pointer;
+  }
+
+  .empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+  .empty code {
+    background: var(--surface-alt);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--mono);
+  }
+
+  .hidden { display: none !important; }
+
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="title-row">
+      <div>
+        <h1>AS-Level Past Papers</h1>
+        <div class="subtitle">Cambridge International (CAIE) · 2020-2024 · <span id="totalProgress">0 / 0</span> completed</div>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search (e.g. s23, 12, ms)" autocomplete="off">
+        <label class="filter-chip" style="background:var(--surface-alt);color:var(--muted);">
+          <input type="checkbox" id="hideDone" style="accent-color:var(--done);">
+          Hide done
+        </label>
+        <button id="exportBtn" title="Download progress as JSON">Export</button>
+        <button id="importBtn" title="Import progress JSON">Import</button>
+        <button id="resetBtn" title="Clear all progress">Reset</button>
+        <button id="themeBtn" title="Toggle theme">Theme</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<input type="file" id="fileInput" accept="application/json" style="display:none">
+
+<script src="papers.js"></script>
+<script>
+(function() {
+  const PAPERS = window.PAPERS || [];
+  const STORAGE_KEY = "pastpaper-progress-v1";
+  const THEME_KEY = "pastpaper-theme";
+
+  const SUBJECTS = [
+    { key: "math-9709",      name: "Mathematics",      code: "9709" },
+    { key: "chemistry-9701", name: "Chemistry",        code: "9701" },
+    { key: "physics-9702",   name: "Physics",          code: "9702" },
+    { key: "cs-9618",        name: "Computer Science", code: "9618" },
+  ];
+
+  const SESSION_ORDER = { s: 0, w: 1, m: 2 };
+
+  // --- progress storage -----------------------------------------------------
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveProgress(p) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+  }
+  let progress = loadProgress();
+
+  // --- theme ----------------------------------------------------------------
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem(THEME_KEY, t);
+  }
+  applyTheme(localStorage.getItem(THEME_KEY) || "light");
+  document.getElementById("themeBtn").onclick = () => {
+    applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  };
+
+  // --- group papers into {subject: {year: {paper: {session: {variant: {qp, ms}}}}}} --
+  function groupedBySubject() {
+    const out = {};
+    for (const s of SUBJECTS) out[s.key] = {};
+    for (const p of PAPERS) {
+      const by = out[p.subject];
+      if (!by) continue;
+      (by[p.year] ??= {});
+      (by[p.year][p.paper] ??= { label: p.paperLabel, sessions: {} });
+      (by[p.year][p.paper].sessions[p.session] ??= { label: p.sessionLabel, variants: {} });
+      (by[p.year][p.paper].sessions[p.session].variants[p.variant] ??= {});
+      by[p.year][p.paper].sessions[p.session].variants[p.variant][p.type] = p.file;
+    }
+    return out;
+  }
+  const GROUPED = groupedBySubject();
+
+  // --- progress counters ----------------------------------------------------
+  function countSubject(subj) {
+    let done = 0, total = 0;
+    for (const p of PAPERS) {
+      if (p.subject !== subj || p.type !== "qp") continue;
+      total++;
+      if (progress[p.file]) done++;
+    }
+    return { done, total };
+  }
+  function countAll() {
+    let done = 0, total = 0;
+    for (const p of PAPERS) {
+      if (p.type !== "qp") continue;
+      total++;
+      if (progress[p.file]) done++;
+    }
+    return { done, total };
+  }
+
+  // --- rendering ------------------------------------------------------------
+  const tabsEl = document.getElementById("tabs");
+  const contentEl = document.getElementById("content");
+  let activeSubject = SUBJECTS[0].key;
+
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    for (const s of SUBJECTS) {
+      const { done, total } = countSubject(s.key);
+      const btn = document.createElement("button");
+      btn.className = "tab" + (s.key === activeSubject ? " active" : "");
+      btn.innerHTML = `${s.name} <span class="count">${done}/${total}</span>`;
+      btn.onclick = () => { activeSubject = s.key; renderTabs(); renderContent(); };
+      tabsEl.appendChild(btn);
+    }
+    const all = countAll();
+    document.getElementById("totalProgress").textContent = `${all.done} / ${all.total}`;
+  }
+
+  function renderContent() {
+    const subject = SUBJECTS.find(s => s.key === activeSubject);
+    const data = GROUPED[activeSubject];
+    const years = Object.keys(data).map(Number).sort((a, b) => b - a);
+
+    if (!years.length) {
+      contentEl.innerHTML = `
+        <div class="empty">
+          No papers found for <strong>${subject.name}</strong>.<br>
+          Run <code>python download.py</code> in this folder, then refresh.
+        </div>`;
+      return;
+    }
+
+    const out = [];
+    for (const year of years) {
+      out.push(`<section class="year-block"><h2 class="year-head">${year}</h2>`);
+      const papers = Object.keys(data[year]).sort();
+      for (const paperCode of papers) {
+        const paper = data[year][paperCode];
+        const rows = [];
+        const sessions = Object.keys(paper.sessions)
+          .sort((a, b) => SESSION_ORDER[a] - SESSION_ORDER[b]);
+
+        let paperDone = 0, paperTotal = 0;
+
+        for (const sess of sessions) {
+          const sessData = paper.sessions[sess];
+          const variants = Object.keys(sessData.variants).map(Number).sort((a, b) => a - b);
+          for (const v of variants) {
+            const files = sessData.variants[v];
+            const qp = files.qp;
+            const ms = files.ms;
+            if (qp) paperTotal++;
+            const checked = qp && progress[qp];
+            if (checked) paperDone++;
+            rows.push(`
+              <tr data-qp="${qp || ""}" class="${checked ? "done" : ""}" data-search="${(sess + (qp || "") + (ms || "")).toLowerCase()}">
+                <td class="session-cell">${sessData.label}</td>
+                <td class="variant-cell">/${String(v).padStart(2, "0")}</td>
+                <td>
+                  <div class="doc-links">
+                    ${qp
+                      ? `<a href="${qp}" target="_blank">QP</a>`
+                      : `<a class="missing">QP</a>`}
+                    ${ms
+                      ? `<a href="${ms}" target="_blank">MS</a>`
+                      : `<a class="missing">MS</a>`}
+                  </div>
+                </td>
+                <td class="check-cell">
+                  ${qp
+                    ? `<input type="checkbox" ${checked ? "checked" : ""} data-file="${qp}">`
+                    : ""}
+                </td>
+              </tr>`);
+          }
+        }
+
+        out.push(`
+          <div class="paper-card" data-paper="${paperCode}">
+            <div class="paper-head">
+              <span class="paper-code">${paperCode}</span>
+              <span class="paper-label">${paper.label}</span>
+              <span class="paper-progress">${paperDone}/${paperTotal}</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th>Variant</th>
+                  <th>Documents</th>
+                  <th style="text-align:right;">Done</th>
+                </tr>
+              </thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>
+          </div>`);
+      }
+      out.push(`</section>`);
+    }
+    contentEl.innerHTML = out.join("");
+    applyFilters();
+  }
+
+  // --- interactions ---------------------------------------------------------
+  contentEl.addEventListener("change", (e) => {
+    const cb = e.target;
+    if (cb.type !== "checkbox" || !cb.dataset.file) return;
+    const file = cb.dataset.file;
+    if (cb.checked) progress[file] = true;
+    else delete progress[file];
+    saveProgress(progress);
+    cb.closest("tr").classList.toggle("done", cb.checked);
+    updateCounts();
+    applyFilters();
+  });
+
+  function updateCounts() {
+    renderTabs();
+    // also refresh per-paper counts inline
+    const cards = contentEl.querySelectorAll(".paper-card");
+    for (const card of cards) {
+      const rows = card.querySelectorAll("tbody tr");
+      let done = 0, total = 0;
+      for (const r of rows) {
+        if (r.dataset.qp) {
+          total++;
+          if (progress[r.dataset.qp]) done++;
+        }
+      }
+      const pp = card.querySelector(".paper-progress");
+      if (pp) pp.textContent = `${done}/${total}`;
+    }
+  }
+
+  // --- search + hide-done filter --------------------------------------------
+  const searchEl = document.getElementById("search");
+  const hideDoneEl = document.getElementById("hideDone");
+
+  function applyFilters() {
+    const q = searchEl.value.trim().toLowerCase();
+    const hideDone = hideDoneEl.checked;
+    const rows = contentEl.querySelectorAll("tbody tr");
+    for (const r of rows) {
+      const matchesSearch = !q || r.dataset.search.includes(q);
+      const isDone = r.classList.contains("done");
+      r.classList.toggle("hidden", !matchesSearch || (hideDone && isDone));
+    }
+    // hide paper-cards and year-blocks that are fully filtered out
+    for (const card of contentEl.querySelectorAll(".paper-card")) {
+      const any = card.querySelectorAll("tbody tr:not(.hidden)").length > 0;
+      card.classList.toggle("hidden", !any);
+    }
+    for (const yr of contentEl.querySelectorAll(".year-block")) {
+      const any = yr.querySelectorAll(".paper-card:not(.hidden)").length > 0;
+      yr.classList.toggle("hidden", !any);
+    }
+  }
+  searchEl.addEventListener("input", applyFilters);
+  hideDoneEl.addEventListener("change", applyFilters);
+
+  // --- export / import / reset ----------------------------------------------
+  document.getElementById("exportBtn").onclick = () => {
+    const blob = new Blob([JSON.stringify(progress, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `pastpaper-progress-${stamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById("importBtn").onclick = () => {
+    document.getElementById("fileInput").click();
+  };
+  document.getElementById("fileInput").onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (typeof data !== "object" || Array.isArray(data)) throw new Error("bad shape");
+        progress = { ...progress, ...data };
+        saveProgress(progress);
+        renderContent();
+        updateCounts();
+      } catch (err) {
+        alert("Could not import: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  document.getElementById("resetBtn").onclick = () => {
+    if (!confirm("Clear all progress? This cannot be undone.")) return;
+    progress = {};
+    saveProgress(progress);
+    renderContent();
+    updateCounts();
+  };
+
+  // --- initial render -------------------------------------------------------
+  if (!PAPERS.length) {
+    tabsEl.innerHTML = "";
+    contentEl.innerHTML = `
+      <div class="empty">
+        <strong>No paper manifest found.</strong><br>
+        Run <code>python download.py</code> in this folder to download papers, then refresh this page.
+      </div>`;
+  } else {
+    renderTabs();
+    renderContent();
+  }
+})();
+</script>
+</body>
+</html>
