@@ -76,6 +76,12 @@
     cursor: pointer;
   }
   .toolbar button:hover { border-color: var(--accent); }
+  .toolbar button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .toolbar button.active:hover { color: white; }
   .hide-done-label {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 10px;
@@ -288,6 +294,7 @@
           <input type="checkbox" id="hideDone">
           Hide done
         </label>
+        <button id="devBtn" title="Dev mode — only show school's tested subjects/papers">Dev mode</button>
         <button id="exportBtn" title="Download progress as JSON">Export</button>
         <button id="importBtn" title="Import progress JSON">Import</button>
         <button id="resetBtn" title="Clear all progress">Reset</button>
@@ -322,16 +329,29 @@
 <script>
 (function() {
   const PAPERS = window.PAPERS || [];
+  const META = window.SUBJECTS_META || {};
   const STORAGE_KEY = "pastpaper-progress-v1";
   const FILTERS_KEY = "pastpaper-filters-v1";
-  const THEME_KEY = "pastpaper-theme";
+  const THEME_KEY   = "pastpaper-theme";
+  const DEV_KEY     = "pastpaper-devmode";
 
-  const SUBJECTS = [
-    { key: "math-9709",      name: "Mathematics",      code: "9709" },
-    { key: "chemistry-9701", name: "Chemistry",        code: "9701" },
-    { key: "physics-9702",   name: "Physics",          code: "9702" },
-    { key: "cs-9618",        name: "Computer Science", code: "9618" },
-  ];
+  // Build subjects list from manifest meta (preserves Python dict order)
+  const SUBJECTS = Object.entries(META).map(([key, m]) => ({
+    key, name: m.name, code: m.code, school: new Set(m.school || []),
+  }));
+  // Fallback for old manifests without META — hardcoded minimum
+  if (!SUBJECTS.length) {
+    SUBJECTS.push(
+      { key: "math-9709",      name: "Mathematics",      code: "9709", school: new Set(["P1","P3","M1","S1"]) },
+      { key: "chemistry-9701", name: "Chemistry",        code: "9701", school: new Set(["P1","P2"]) },
+      { key: "physics-9702",   name: "Physics",          code: "9702", school: new Set(["P1","P2"]) },
+      { key: "cs-9618",        name: "Computer Science", code: "9618", school: new Set(["P1","P2"]) },
+    );
+  }
+
+  // Dev mode: default ON (first-time visitors see the school subset).
+  // Stored as "off" | "on" (or absent → on).
+  let devMode = localStorage.getItem(DEV_KEY) !== "off";
 
   const SESSIONS = [
     { key: "s", label: "May/Jun" },
@@ -376,6 +396,21 @@
     applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
   };
 
+  // --- Dev mode toggle ------------------------------------------------------
+  const devBtn = document.getElementById("devBtn");
+  function refreshDevBtn() {
+    devBtn.classList.toggle("active", devMode);
+    devBtn.textContent = devMode ? "Dev mode: on" : "Dev mode: off";
+  }
+  refreshDevBtn();
+  devBtn.onclick = () => {
+    devMode = !devMode;
+    localStorage.setItem(DEV_KEY, devMode ? "on" : "off");
+    refreshDevBtn();
+    renderTabs();
+    renderContent();
+  };
+
   // --- dataset introspection ------------------------------------------------
   const allYears = [...new Set(PAPERS.map(p => p.year))].sort((a, b) => b - a);
   const yearRangeEl = document.getElementById("yearRange");
@@ -399,6 +434,19 @@
   const GROUPED = group();
 
   // --- matches filters? -----------------------------------------------------
+  function subjectBySubjectKey(key) { return SUBJECTS.find(s => s.key === key); }
+
+  function paperVisible(subjectKey, paper) {
+    if (!devMode) return true;
+    const s = subjectBySubjectKey(subjectKey);
+    return !!(s && s.school.has(paper));
+  }
+  function subjectVisible(subjectKey) {
+    if (!devMode) return true;
+    const s = subjectBySubjectKey(subjectKey);
+    return !!(s && s.school.size > 0);
+  }
+
   function passesFilter(year, session, variant) {
     if (filters.years.size    && !filters.years.has(year))       return false;
     if (filters.sessions.size && !filters.sessions.has(session)) return false;
@@ -407,11 +455,12 @@
     return true;
   }
 
-  // --- progress counters (respect filters) ----------------------------------
+  // --- progress counters (respect filters + dev mode) -----------------------
   function countSubject(subj) {
     let done = 0, total = 0;
     for (const p of PAPERS) {
       if (p.subject !== subj || p.type !== "qp") continue;
+      if (!paperVisible(p.subject, p.paper)) continue;
       if (!passesFilter(p.year, p.session, p.variant)) continue;
       total++;
       if (progress[p.file]) done++;
@@ -422,6 +471,8 @@
     let done = 0, total = 0;
     for (const p of PAPERS) {
       if (p.type !== "qp") continue;
+      if (!subjectVisible(p.subject)) continue;
+      if (!paperVisible(p.subject, p.paper)) continue;
       if (!passesFilter(p.year, p.session, p.variant)) continue;
       total++;
       if (progress[p.file]) done++;
@@ -484,7 +535,12 @@
 
   function renderTabs() {
     tabsEl.innerHTML = "";
-    for (const s of SUBJECTS) {
+    const visible = SUBJECTS.filter(s => subjectVisible(s.key));
+    // If active subject is hidden by dev mode, switch to first visible one
+    if (!visible.find(s => s.key === activeSubject) && visible.length) {
+      activeSubject = visible[0].key;
+    }
+    for (const s of visible) {
       const { done, total } = countSubject(s.key);
       const btn = document.createElement("button");
       btn.className = "tab" + (s.key === activeSubject ? " active" : "");
@@ -518,6 +574,7 @@
     let anyPaperShown = false;
 
     for (const paperCode of paperCodes) {
+      if (!paperVisible(activeSubject, paperCode)) continue;
       const paper = data[paperCode];
       const pd = paper.paperDigit;
       const columns = [pd * 10 + 1, pd * 10 + 2, pd * 10 + 3];
