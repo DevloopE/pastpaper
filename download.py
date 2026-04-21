@@ -37,7 +37,7 @@ SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
-YEARS = [2020, 2021, 2022, 2023, 2024, 2025]
+YEARS = [2019, 2020, 2021, 2022, 2023, 2024, 2025]
 SESSIONS = [
     ("s", "May/June"),
     ("w", "Oct/Nov"),
@@ -199,13 +199,27 @@ def download_one(target: dict, out_root: Path) -> tuple[str, dict | None]:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--subject", help="only fetch this subject key (e.g. chemistry-9701)")
+    ap.add_argument("--year", type=int, action="append", help="only fetch this year (repeatable)")
+    args = ap.parse_args()
+
     here = Path(__file__).parent
     papers_dir = here / "papers"
     papers_dir.mkdir(exist_ok=True)
 
-    targets = list(build_targets())
+    targets = [
+        t for t in build_targets()
+        if (not args.subject or t["subject"] == args.subject)
+        and (not args.year or t["year"] in args.year)
+    ]
     total = len(targets)
-    print(f"Attempting {total} files across {len(SUBJECTS)} subjects, years {YEARS[0]}-{YEARS[-1]}...")
+    scope = (
+        f"subject={args.subject or 'all'}, "
+        f"years={args.year or list(range(YEARS[0], YEARS[-1]+1))}"
+    )
+    print(f"Attempting {total} files ({scope})...")
 
     manifest: list[dict] = []
     counts = {"ok": 0, "cached": 0, "miss": 0, "err": 0}
