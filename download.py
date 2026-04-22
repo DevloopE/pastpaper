@@ -28,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 BASE = "https://papers.xtremepape.rs/CAIE/AS and A Level"
+LIVE_BASE = "https://devloope.github.io/pastpaper"
 USER_AGENT = "Mozilla/5.0 (pastpaper-downloader)"
 TIMEOUT = 30
 MAX_WORKERS = 12
@@ -155,8 +156,18 @@ def fetch(url: str) -> bytes:
         return r.read()
 
 
-def download_one(target: dict, out_root: Path) -> tuple[str, dict | None]:
-    """Returns (status, manifest_entry or None). status is 'ok', 'cached', 'miss', or 'err:...'"""
+def _remote_exists(rel: str) -> bool:
+    """HEAD-check the live GitHub Pages URL. Skip fetch if already served."""
+    url = LIVE_BASE + "/" + urllib.parse.quote(rel)
+    try:
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=15, context=SSL_CTX) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+def download_one(target: dict, out_root: Path, trust_remote: bool) -> tuple[str, dict | None]:
+    """Returns (status, manifest_entry or None). status is 'ok', 'cached', 'remote', 'miss', or 'err:...'"""
     subj_dir = out_root / target["subject"]
     local = subj_dir / target["filename"]
     rel = f"papers/{target['subject']}/{target['filename']}"
@@ -177,6 +188,9 @@ def download_one(target: dict, out_root: Path) -> tuple[str, dict | None]:
 
     if local.exists() and local.stat().st_size > 0:
         return "cached", entry
+
+    if trust_remote and _remote_exists(rel):
+        return "remote", entry
 
     path = f"{BASE}/{target['folder']}/{target['filename']}"
     url = urllib.parse.quote(path, safe=":/")
@@ -203,6 +217,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--subject", help="only fetch this subject key (e.g. chemistry-9701)")
     ap.add_argument("--year", type=int, action="append", help="only fetch this year (repeatable)")
+    ap.add_argument(
+        "--trust-remote", action="store_true",
+        help="skip fetch if the file is already live on GitHub Pages "
+             "(enables freeing local disk after push)",
+    )
+    ap.add_argument(
+        "--free-local", action="store_true",
+        help="after building the manifest, delete local PDFs that are live on Pages",
+    )
     args = ap.parse_args()
 
     here = Path(__file__).parent
@@ -222,11 +245,11 @@ def main():
     print(f"Attempting {total} files ({scope})...")
 
     manifest: list[dict] = []
-    counts = {"ok": 0, "cached": 0, "miss": 0, "err": 0}
+    counts = {"ok": 0, "cached": 0, "remote": 0, "miss": 0, "err": 0}
 
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        futures = {pool.submit(download_one, t, papers_dir): t for t in targets}
+        futures = {pool.submit(download_one, t, papers_dir, args.trust_remote): t for t in targets}
         done = 0
         for fut in as_completed(futures):
             target = futures[fut]
@@ -238,6 +261,9 @@ def main():
             elif status == "cached":
                 counts["cached"] += 1
                 manifest.append(entry)
+            elif status == "remote":
+                counts["remote"] += 1
+                manifest.append(entry)
             elif status == "miss":
                 counts["miss"] += 1
             else:
@@ -247,7 +273,7 @@ def main():
                 elapsed = time.time() - t0
                 print(
                     f"  {done}/{total} "
-                    f"ok={counts['ok']} cached={counts['cached']} "
+                    f"ok={counts['ok']} cached={counts['cached']} remote={counts['remote']} "
                     f"miss={counts['miss']} err={counts['err']} "
                     f"({elapsed:.0f}s)"
                 )
@@ -276,10 +302,30 @@ def main():
     print(
         f"\nDone in {elapsed:.0f}s — "
         f"downloaded {counts['ok']}, cached {counts['cached']}, "
-        f"missing {counts['miss']}, errors {counts['err']}."
+        f"remote {counts['remote']}, missing {counts['miss']}, errors {counts['err']}."
     )
     print(f"Manifest: {manifest_path}")
-    print(f"Open index.html in your browser to use the menu.")
+
+    if args.free_local:
+        print("\nFreeing local PDFs that are already live on Pages...")
+        freed = 0
+        freed_bytes = 0
+        kept = 0
+        for e in manifest:
+            p = papers_dir / Path(e["file"]).relative_to("papers")
+            if not p.exists():
+                continue
+            if _remote_exists(e["file"]):
+                freed_bytes += p.stat().st_size
+                p.unlink()
+                freed += 1
+            else:
+                kept += 1
+        # Remove empty subject folders
+        for d in papers_dir.iterdir():
+            if d.is_dir() and not any(d.iterdir()):
+                d.rmdir()
+        print(f"  freed {freed} files ({freed_bytes/1024/1024:.1f} MB), kept {kept} not-yet-live")
 
 
 if __name__ == "__main__":
