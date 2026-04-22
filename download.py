@@ -55,7 +55,9 @@ SCHOOL_SUBSET = {
     "chemistry-9701": ["P1", "P2"],
     "physics-9702":   ["P1", "P2"],
     "cs-9618":        ["P1", "P2"],
-    "economics-9708": [],  # not tested at school
+    "economics-9708": [],
+    "geography-9696": [],
+    "further-math-9231": [],
 }
 
 SUBJECTS = {
@@ -116,6 +118,28 @@ SUBJECTS = {
             "P2": (2, "Data Response & Essay (AS)"),
             "P3": (3, "Multiple Choice (A Level)"),
             "P4": (4, "Data Response & Essays (A Level)"),
+        },
+    },
+    "geography-9696": {
+        "code": "9696",
+        "name": "Geography",
+        "folder": "Geography (9696)",
+        "papers": {
+            "P1": (1, "Core Physical Geography (AS)"),
+            "P2": (2, "Core Human Geography (AS)"),
+            "P3": (3, "Advanced Physical Geography"),
+            "P4": (4, "Advanced Human Geography"),
+        },
+    },
+    "further-math-9231": {
+        "code": "9231",
+        "name": "Further Mathematics",
+        "folder": "Mathematics - Further (9231)",
+        "papers": {
+            "P1": (1, "Further Pure Mathematics 1"),
+            "P2": (2, "Further Pure Mathematics 2"),
+            "P3": (3, "Further Mechanics"),
+            "P4": (4, "Further Probability & Statistics"),
         },
     },
 }
