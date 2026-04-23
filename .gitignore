@@ -2,3 +2,21 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+PLAN_PHOTO_SEARCH.md
+
+# Secrets
+apiminerU.txt
+.env
+*.key
+
+# Local pipeline artifacts (don't push to GitHub Pages)
+search/
+index_state/
+chroma/
+DocRes/
+models/
+*.chromadb
+
+# Scratch scripts + screenshots
+_*.ps1
+_*.png
